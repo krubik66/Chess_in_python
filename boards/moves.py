@@ -191,13 +191,12 @@ def kingMoves(coordinates: tuple[int,int], playboard: list[list[Place]]):
                     if len(presentPossible([(-1, 0), (-2, 0)], coordinates, playboard)) == 2:
                         allMoves.append((-3, 0))
             except:
-                print('failed to jump')
+                pass
             try:
                 if not playboard[7][7].currentPiece.moved:
                     if len(presentPossible([(1, 0)], coordinates, playboard)) == 1:
                         allMoves.append((2, 0))
             except ValueError:
-                print('failed to jump')
                 pass
         else:
             try:
@@ -205,14 +204,12 @@ def kingMoves(coordinates: tuple[int,int], playboard: list[list[Place]]):
                     if int(len(presentPossible([(-1, 0), (-2, 0)], coordinates, playboard))) == 2:
                         allMoves.append((-3, 0))
             except:
-                print('failed to jump')
                 pass
             try:
                 if not playboard[7][0].currentPiece.moved:
                     if int(len(presentPossible([(1, 0)], coordinates, playboard))) == 1:
                         allMoves.append((2, 0))
             except:
-                print('failed to jump')
                 pass
     return presentPossible(allMoves, coordinates, playboard)
 
@@ -262,12 +259,14 @@ def pawnMoves(coordinates: tuple[int,int], playboard: list[list[Place]], lastMov
         try:
             if playboard[x + 1][y + 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x + 1, y + 1))
-        except:
+        except BufferError:
+            print('black pawn problem with crossing')
             pass
         try:
-            if playboard[x - 1][y + 1].currentPiece.isWhite:
+            if playboard[x - 1][y + 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x - 1, y + 1))
         except:
+            print('black pawn problem with crossing')
             pass
 
     return toReturn
