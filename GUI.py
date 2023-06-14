@@ -44,6 +44,7 @@ class GUI():
                     "y": (button_spacing + (button_height + button_spacing) * j)
                 }
                 buttons.append(current)
+                playboard[i][j].coordinates = (i, j)
         
         running = True
         while running:
@@ -67,7 +68,7 @@ class GUI():
                             else:
                                 cod = button['coordinates']
                                 self.clearMoves(toMakeRed, playboard)
-                                toMakeRed = moves.possibleMoves(cod, playboard, lastMove)
+                                toMakeRed = moves.getMoves(cod, playboard, lastMove)
                             
             screen.fill(BROWN)
 

@@ -8,16 +8,22 @@ from chessPieces.rook import Rook
 from chessPieces.knight import Knight
 from chessPieces.bishop import Bishop
 from chessPieces.pawn import Pawn
+import copy
 
 def move(start: tuple[int,int], end: tuple[int,int], playboard: list[list[Place]], enemy: Player, movementRight: bool):
     x = start[0]
     y = start[1]
     startingPlace: Place = playboard[x][y]
     endingPlace: Place = playboard[end[0]][end[1]]
+    alreadyKilled: bool = False
+
     if endingPlace.currentPiece != None:
+        alreadyKilled = True
         enemy.pieces.remove(endingPlace.currentPiece)
+
     endingPlace.currentPiece = startingPlace.currentPiece
     startingPlace.currentPiece = None
+
     match endingPlace.currentPiece:
         case King():
             endingPlace.currentPiece.moved = True
@@ -33,8 +39,57 @@ def move(start: tuple[int,int], end: tuple[int,int], playboard: list[list[Place]
                         move((7, 0), (5, 0), playboard, enemy, movementRight)
         case Rook():
             endingPlace.currentPiece.moved = True
+        case Pawn():
+            if start[0] != end[0] and not alreadyKilled:
+                killed = playboard[end[0]][start[1]]
+                enemy.pieces.remove(killed.currentPiece)
+                killed.currentPiece = None
     return movementRight
 
+def shadowMove(start: tuple[int,int], end: tuple[int,int], playboard: list[list[Place]]):
+    x = start[0]
+    y = start[1]
+    startingPlace: Place = playboard[x][y]
+    endingPlace: Place = playboard[end[0]][end[1]]
+    alreadyKilled: bool = False
+
+    if endingPlace.currentPiece != None:
+        alreadyKilled = True
+
+    endingPlace.currentPiece = startingPlace.currentPiece
+    startingPlace.currentPiece = None
+
+    match endingPlace.currentPiece:
+        case King():
+            endingPlace.currentPiece.moved = True
+            if checkIfCastling(start, end):
+                match end:
+                    case(6, 7):
+                        shadowMove((7, 7), (5, 7), playboard)
+                    case(1, 7):
+                        shadowMove((0, 7), (2, 7), playboard)
+                    case(1, 0):
+                        shadowMove((0, 0), (2, 0), playboard)
+                    case(6, 0):
+                        shadowMove((7, 0), (5, 0), playboard)
+        case Rook():
+            endingPlace.currentPiece.moved = True
+        case Pawn():
+            if start[0] != end[0] and not alreadyKilled:
+                killed = playboard[end[0]][start[1]]
+                killed.currentPiece = None
+
+def check(playboard: list[list[Place]], who: bool):
+    for row in playboard:
+        for place in row:
+            if place.currentPiece != None and place.currentPiece.isWhite != who:
+                current = possibleMoves(place.coordinates, playboard, (0, 0))
+                for cod in current:
+                    if isinstance(playboard[cod[0]][cod[1]].currentPiece, King):
+                        return True
+    
+    return False
+    
 def checkIfCastling(start: tuple[int,int], end: tuple[int,int]):
     return abs(start[0] - end[0]) > 1
 
@@ -60,6 +115,23 @@ def possibleMoves(coordinates: tuple[int,int], playboard: list[list[Place]], las
             return pawnMoves(coordinates, playboard, lastMove)
         case _:
             raise ValueError('What am I? I cannot move')
+        
+def legalMoves(start:tuple, possibleM: list, playboard: list[list[Place]]):
+    toReturn = []
+    if possibleM == []:
+        return []
+    forWho = playboard[start[0]][start[1]].currentPiece.isWhite
+    for move in possibleM:
+        copiedBoard = copy.deepcopy(playboard)
+        current = copiedBoard[move[0]][move[1]]
+        shadowMove(start, move, copiedBoard)
+        if not check(copiedBoard, forWho):
+            toReturn.append(move)
+
+    return toReturn
+
+def getMoves(coordinates: tuple[int,int], playboard: list[list[Place]], lastMove: tuple[tuple]):
+    return legalMoves(coordinates, possibleMoves(coordinates, playboard, lastMove), playboard)
 
 def presentPossible(all: tuple, coordinates: tuple[int,int], playboard: list[list[Place]]):
     toReturn: list = []
@@ -240,7 +312,6 @@ def pawnMoves(coordinates: tuple[int,int], playboard: list[list[Place]], lastMov
                 toReturn.append((x, y - 1))
                 if y == 6 and playboard[x][y - 2].currentPiece == None:
                     toReturn.append((x, y - 2))
-            print((abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2))
             if playboard[x + 1][y - 1].currentPiece != None and not playboard[x + 1][y - 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x + 1, y - 1))
             if playboard[x - 1][y - 1].currentPiece != None and not playboard[x - 1][y - 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
@@ -259,7 +330,7 @@ def pawnMoves(coordinates: tuple[int,int], playboard: list[list[Place]], lastMov
         try:
             if playboard[x + 1][y + 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x + 1, y + 1))
-        except BufferError:
+        except:
             print('black pawn problem with crossing')
             pass
         try:

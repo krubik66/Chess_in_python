@@ -5,6 +5,7 @@ class Place():
     def __init__(self) -> None:
         self.possibleMove: bool = False
         self.currentPiece: ChessPiece | None = None
+        self.coordinates: tuple | None = None
 
     def __str__(self) -> str:
         match self.currentPiece:
