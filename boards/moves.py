@@ -31,10 +31,10 @@ def move(start: tuple[int,int], end: tuple[int,int], playboard: list[list[Place]
                 match end:
                     case(6, 7):
                         move((7, 7), (5, 7), playboard, enemy, movementRight)
-                    case(1, 7):
-                        move((0, 7), (2, 7), playboard, enemy, movementRight)
-                    case(1, 0):
-                        move((0, 0), (2, 0), playboard, enemy, movementRight)
+                    case(2, 7):
+                        move((0, 7), (3, 7), playboard, enemy, movementRight)
+                    case(2, 0):
+                        move((0, 0), (3, 0), playboard, enemy, movementRight)
                     case(6, 0):
                         move((7, 0), (5, 0), playboard, enemy, movementRight)
         case Rook():
@@ -42,8 +42,12 @@ def move(start: tuple[int,int], end: tuple[int,int], playboard: list[list[Place]
         case Pawn():
             if start[0] != end[0] and not alreadyKilled:
                 killed = playboard[end[0]][start[1]]
-                enemy.pieces.remove(killed.currentPiece)
-                killed.currentPiece = None
+                if killed.currentPiece:
+                    enemy.pieces.remove(killed.currentPiece)
+                    killed.currentPiece = None
+
+    
+    
     return movementRight
 
 def shadowMove(start: tuple[int,int], end: tuple[int,int], playboard: list[list[Place]]):
@@ -67,9 +71,9 @@ def shadowMove(start: tuple[int,int], end: tuple[int,int], playboard: list[list[
                     case(6, 7):
                         shadowMove((7, 7), (5, 7), playboard)
                     case(1, 7):
-                        shadowMove((0, 7), (2, 7), playboard)
+                        shadowMove((0, 7), (3, 7), playboard)
                     case(1, 0):
-                        shadowMove((0, 0), (2, 0), playboard)
+                        shadowMove((0, 0), (3, 0), playboard)
                     case(6, 0):
                         shadowMove((7, 0), (5, 0), playboard)
         case Rook():
@@ -85,7 +89,7 @@ def check(playboard: list[list[Place]], who: bool):
             if place.currentPiece != None and place.currentPiece.isWhite != who:
                 current = possibleMoves(place.coordinates, playboard, (0, 0))
                 for cod in current:
-                    if isinstance(playboard[cod[0]][cod[1]].currentPiece, King):
+                    if isinstance(playboard[cod[0]][cod[1]].currentPiece, King) and playboard[cod[0]][cod[1]].currentPiece.isWhite == who:
                         return True
     
     return False
@@ -122,12 +126,13 @@ def legalMoves(start:tuple, possibleM: list, playboard: list[list[Place]]):
         return []
     forWho = playboard[start[0]][start[1]].currentPiece.isWhite
     for move in possibleM:
+        #print(f'possible move: {move}')
         copiedBoard = copy.deepcopy(playboard)
         current = copiedBoard[move[0]][move[1]]
         shadowMove(start, move, copiedBoard)
         if not check(copiedBoard, forWho):
             toReturn.append(move)
-
+    print(f'legal res: {toReturn}')
     return toReturn
 
 def getMoves(coordinates: tuple[int,int], playboard: list[list[Place]], lastMove: tuple[tuple]):
@@ -140,12 +145,13 @@ def presentPossible(all: tuple, coordinates: tuple[int,int], playboard: list[lis
     currentPiece = playboard[x][y].currentPiece
 
     for one in all:
-        try:
-            current = playboard[x + one[0]][y + one[1]]
-            if current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite:
-                toReturn.append((x  + one[0], y + one[1]))
-        except:
-            pass
+        if max(one[0] + x, one[1] + y) < 8 and min(one[0] + x, one[1] + y) >= 0:
+            try:
+                current = playboard[x + one[0]][y + one[1]]
+                if current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite:
+                    toReturn.append((x  + one[0], y + one[1]))
+            except:
+                pass
     
     return toReturn
 
@@ -165,7 +171,7 @@ def intoDirection(direction: tuple, coordinates: tuple[int,int], playboard: list
             while i < 8:
                 try:
                     current = playboard[x][y + i]
-                    if direction1 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite):
+                    if direction1 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite) and y + i < 8:
                         toReturn.append((x, y + i))
                         if current.currentPiece != None:
                             direction1 = False
@@ -175,7 +181,7 @@ def intoDirection(direction: tuple, coordinates: tuple[int,int], playboard: list
                     pass
                 try:
                     current = playboard[x][y - i]
-                    if direction2 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite):
+                    if direction2 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite) and y - i >= 0:
                         toReturn.append((x, y - i))
                         if current.currentPiece != None:
                             direction2 = False
@@ -188,7 +194,7 @@ def intoDirection(direction: tuple, coordinates: tuple[int,int], playboard: list
             while i < 8:
                 try:
                     current = playboard[x + i][y]
-                    if direction1 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite):
+                    if direction1 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite) and x + i < 8:
                         toReturn.append((x + i, y))
                         if current.currentPiece != None:
                             direction1 = False
@@ -198,7 +204,7 @@ def intoDirection(direction: tuple, coordinates: tuple[int,int], playboard: list
                     pass
                 try:
                     current = playboard[x - i][y]
-                    if direction2 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite):
+                    if direction2 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite) and x - i >= 0:
                         toReturn.append((x - i, y))
                         if current.currentPiece != None:
                             direction2 = False
@@ -211,7 +217,7 @@ def intoDirection(direction: tuple, coordinates: tuple[int,int], playboard: list
             while i < 8:
                 try:
                     current = playboard[x + i][y + i]
-                    if direction1 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite):
+                    if direction1 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite) and max(x + i, y + 1) < 8:
                         toReturn.append((x + i, y + i))
                         if current.currentPiece != None:
                             direction1 = False
@@ -221,7 +227,7 @@ def intoDirection(direction: tuple, coordinates: tuple[int,int], playboard: list
                     pass
                 try:
                     current = playboard[x - i][y + i]
-                    if direction2 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite):
+                    if direction2 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite) and x - i >= 0 and y + i < 8:
                         toReturn.append((x - i, y + i))
                         if current.currentPiece != None:
                             direction2 = False
@@ -231,7 +237,7 @@ def intoDirection(direction: tuple, coordinates: tuple[int,int], playboard: list
                     pass
                 try:
                     current = playboard[x + i][y - i]
-                    if direction3 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite):
+                    if direction3 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite) and x + i < 8 and y - i >= 0:
                         toReturn.append((x + i, y - i))
                         if current.currentPiece != None:
                             direction3 = False
@@ -241,7 +247,7 @@ def intoDirection(direction: tuple, coordinates: tuple[int,int], playboard: list
                     pass
                 try:
                     current = playboard[x - i][y - i]
-                    if direction4 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite):
+                    if direction4 and (current.currentPiece == None or current.currentPiece.isWhite != currentPiece.isWhite) and min(x - i, y - i) >= 0:
                         toReturn.append((x - i, y - i))
                         if current.currentPiece != None:
                             direction4 = False
@@ -254,27 +260,27 @@ def intoDirection(direction: tuple, coordinates: tuple[int,int], playboard: list
 
 
 def kingMoves(coordinates: tuple[int,int], playboard: list[list[Place]]):
-    allMoves = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    allMoves = [(1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1), (-1, 0), (0, 1), (0, -1)]
     currentPiece = playboard[coordinates[0]][coordinates[1]].currentPiece
     if not currentPiece.moved:
         if currentPiece.isWhite:
             try:
                 if not playboard[0][7].currentPiece.moved:
                     if len(presentPossible([(-1, 0), (-2, 0)], coordinates, playboard)) == 2:
-                        allMoves.append((-3, 0))
+                        allMoves.append((-2, 0))
             except:
                 pass
             try:
                 if not playboard[7][7].currentPiece.moved:
                     if len(presentPossible([(1, 0)], coordinates, playboard)) == 1:
                         allMoves.append((2, 0))
-            except ValueError:
+            except:
                 pass
         else:
             try:
                 if not playboard[0][0].currentPiece.moved:
                     if int(len(presentPossible([(-1, 0), (-2, 0)], coordinates, playboard))) == 2:
-                        allMoves.append((-3, 0))
+                        allMoves.append((-2, 0))
             except:
                 pass
             try:
@@ -331,13 +337,11 @@ def pawnMoves(coordinates: tuple[int,int], playboard: list[list[Place]], lastMov
             if playboard[x + 1][y + 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x + 1, y + 1))
         except:
-            print('black pawn problem with crossing')
             pass
         try:
             if playboard[x - 1][y + 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x - 1, y + 1))
         except:
-            print('black pawn problem with crossing')
             pass
 
     return toReturn
