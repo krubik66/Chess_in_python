@@ -93,6 +93,14 @@ def check(playboard: list[list[Place]], who: bool):
                         return True
     
     return False
+
+def isThisTheEnd(playboard: list[list[Place]], lastMove: tuple[tuple], who: bool):
+    for row in playboard:
+        for place in row:
+            if place.currentPiece != None and place.currentPiece.isWhite == who:
+                if legalMoves(place.coordinates, possibleMoves(place.coordinates, playboard, lastMove), playboard) != []:
+                    return False
+    return True
     
 def checkIfCastling(start: tuple[int,int], end: tuple[int,int]):
     return abs(start[0] - end[0]) > 1
@@ -318,9 +326,9 @@ def pawnMoves(coordinates: tuple[int,int], playboard: list[list[Place]], lastMov
                 toReturn.append((x, y - 1))
                 if y == 6 and playboard[x][y - 2].currentPiece == None:
                     toReturn.append((x, y - 2))
-            if playboard[x + 1][y - 1].currentPiece != None and not playboard[x + 1][y - 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
+            if (playboard[x + 1][y - 1].currentPiece != None and not playboard[x + 1][y - 1].currentPiece.isWhite) or (lastMove[1][0] - x == 1 and lastMove[1][1] == y and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x + 1, y - 1))
-            if playboard[x - 1][y - 1].currentPiece != None and not playboard[x - 1][y - 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
+            if (playboard[x - 1][y - 1].currentPiece != None and not playboard[x - 1][y - 1].currentPiece.isWhite) or (lastMove[1][0] - x == -1 and lastMove[1][1] == y and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x - 1, y - 1))
         except:
             pass
@@ -334,12 +342,12 @@ def pawnMoves(coordinates: tuple[int,int], playboard: list[list[Place]], lastMov
         except:
             pass
         try:
-            if playboard[x + 1][y + 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
+            if (playboard[x + 1][y + 1].currentPiece != None and playboard[x + 1][y + 1].currentPiece.isWhite) or (lastMove[1][0] - x == 1 and lastMove[1][1] == y and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x + 1, y + 1))
         except:
             pass
         try:
-            if playboard[x - 1][y + 1].currentPiece.isWhite or (abs(lastMove[1][0] - x) == 1 and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
+            if (playboard[x - 1][y + 1].currentPiece != None and playboard[x - 1][y + 1].currentPiece.isWhite) or (lastMove[1][0] - x == -1 and lastMove[1][1] == y and isinstance(playboard[lastMove[1][0]][lastMove[1][1]].currentPiece, Pawn) and abs(lastMove[1][1] - lastMove[0][1]) == 2):
                 toReturn.append((x - 1, y + 1))
         except:
             pass

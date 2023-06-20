@@ -3,4 +3,8 @@ from chessPieces.chessPiece import ChessPiece
 class Knight(ChessPiece):
 
     def __init__(self, isWhite: bool) -> None:
-        super().__init__('knight', 3, isWhite, 'images/3.png')
+        if isWhite:
+            im = 'images/wKnight.png'
+        else:
+            im = 'images/bKnight.png'
+        super().__init__('knight', 3, isWhite, im)
