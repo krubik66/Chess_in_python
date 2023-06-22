@@ -1,9 +1,11 @@
 from boards.place import Place
 
 class Board():
-    map: list[list[Place]] = []
+    
     def __init__(self) -> None:
         
+        self.map: list[list[Place]] = []
+
         for i in range(8):
             self.map.append([])
             for j in range(8):

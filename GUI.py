@@ -3,6 +3,9 @@ from boards.board import Board
 from boards.place import Place
 from player import Player
 import boards.moves as moves
+import pickle
+import os
+from saving import Save_data
 
 
 class GUI():
@@ -24,27 +27,26 @@ class GUI():
         BLACK = (0, 0, 0)
         RED = (150, 0, 0)
         BROWN = (139, 69, 19)
+        GRAY = (100, 100, 100)
 
         font = pygame.font.Font(None, 30)
 
-        buttonWidth, buttonHeight = 80, 80
-        buttonSpacing = 20
+        self.buttonWidth, self.buttonHeight = 80, 80
+        self.buttonSpacing = 20
 
         buttons = []
+        saveButton = {
+            "text": f'Save',
+            "x": 830,
+            "y": 700
+        }
+        loadButton = {
+            "text": f'Load',
+            "x": 890,
+            "y": 700
+        }
         
-
-        for i in range(0, 8):
-            for j in range(0, 8):
-                current = {
-                    'coordinates':(i, j),
-                    'place': playboard[i][j],
-                    "text": f'',
-                    "picture": playboard[i][j].pictures(),
-                    "x": (buttonSpacing + (buttonWidth + buttonSpacing) * i),
-                    "y": (buttonSpacing + (buttonHeight + buttonSpacing) * j)
-                }
-                buttons.append(current)
-                playboard[i][j].coordinates = (i, j)
+        buttons = self.renewButtons(playboard)
         
         running = True
         while running:
@@ -54,9 +56,31 @@ class GUI():
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mousePos = pygame.mouse.get_pos()
                     print(f'mousePos: {mousePos}')
+                    if (saveButton["x"] <= mousePos[0] <= saveButton["x"] + self.buttonWidth
+                            and saveButton["y"] <= mousePos[1] <= saveButton["y"] + self.buttonHeight):
+                        self.save(board, white, black, movementRight, movesHistory, lastMove)
+                    if (loadButton["x"] <= mousePos[0] <= loadButton["x"] + self.buttonWidth
+                        and loadButton["y"] <= mousePos[1] <= loadButton["y"] + self.buttonHeight):
+                        try:
+                            with open('save.pkl', 'rb') as file:
+                                loadedSave: Save_data = pickle.load(file)
+
+                            playboard = loadedSave.board.map
+                            board.map = playboard
+                            white = loadedSave.white
+                            black = loadedSave.black
+                            buttons = self.renewButtons(playboard)
+                            movementRight = loadedSave.movementRight
+                            movesHistory = loadedSave.movesHistory
+                            lastMove = loadedSave.lastMove
+                            print(f'w: {loadedSave.white}\nb: {loadedSave.black}\nb: {loadedSave.board}')
+                            print('loaded')
+                        except:
+                            pass
+
                     for button in buttons:
-                        if (button["x"] <= mousePos[0] <= button["x"] + buttonWidth
-                            and button["y"] <= mousePos[1] <= button["y"] + buttonHeight):
+                        if (button["x"] <= mousePos[0] <= button["x"] + self.buttonWidth
+                            and button["y"] <= mousePos[1] <= button["y"] + self.buttonHeight):
                             if button['place'].possibleMove and playboard[cod[0]][cod[1]].currentPiece.isWhite == movementRight:
                                 if movementRight:
                                     enemy = black
@@ -85,7 +109,7 @@ class GUI():
             for label in labels:
                 i += 1
                 rendered = font.render(label['text'], True, color=BLACK)
-                screen.blit(rendered, (830, buttonSpacing * i))
+                screen.blit(rendered, (830, self.buttonSpacing * i))
 
             i = 0
             counter = 1
@@ -104,20 +128,27 @@ class GUI():
                 counter += 1
                 if toMakeRed.__len__() > 0 and button['coordinates'] in toMakeRed:
                     button['place'].possibleMove = True
-                    pygame.draw.rect(screen, RED, (button["x"], button["y"], buttonWidth, buttonHeight))
+                    pygame.draw.rect(screen, RED, (button["x"], button["y"], self.buttonWidth, self.buttonHeight))
                 else:
-                    pygame.draw.rect(screen, colour, (button["x"], button["y"], buttonWidth, buttonHeight))
+                    pygame.draw.rect(screen, colour, (button["x"], button["y"], self.buttonWidth, self.buttonHeight))
                 buttonSurface = font.render(button["text"], True, text)
-                buttonRect = buttonSurface.get_rect(center=(button["x"] + buttonWidth // 2, button["y"] + buttonHeight // 2))
+                buttonRect = buttonSurface.get_rect(center=(button["x"] + self.buttonWidth // 2, button["y"] + self.buttonHeight // 2))
                 
                 currentPlace: Place = button['place']
                 try:
                     picture = pygame.image.load(currentPlace.currentPiece.link)
-                    picture = pygame.transform.scale(picture, (buttonWidth - 20, buttonHeight - 20))
+                    picture = pygame.transform.scale(picture, (self.buttonWidth - 20, self.buttonHeight - 20))
                     pictureRect = (buttonRect.centerx - picture.get_width() // 2, buttonRect.centery - picture.get_height() // 2)
                     screen.blit(picture, pictureRect)
                 except:
                     screen.blit(buttonSurface, buttonRect)
+
+            rendered = font.render(saveButton['text'], True, color=pygame.Color('yellow'))
+            pygame.draw.rect(screen, GRAY, (saveButton["x"], saveButton["y"], self.buttonWidth * 2, self.buttonHeight // 2))
+            screen.blit(rendered, (saveButton['x'] + self.buttonSpacing // 2, saveButton['y'] + self.buttonSpacing // 2))
+
+            rendered = font.render(loadButton['text'], True, color=pygame.Color('yellow'))
+            screen.blit(rendered, (loadButton['x'] + self.buttonSpacing // 2, loadButton['y'] + self.buttonSpacing // 2))
 
             pygame.display.flip()
 
@@ -191,3 +222,35 @@ class GUI():
             pygame.display.flip()
         
         return False
+
+    def renewButtons(self, playboard):
+        buttons = []
+        for i in range(0, 8):
+            for j in range(0, 8):
+                current = {
+                    'coordinates':(i, j),
+                    'place': playboard[i][j],
+                    "text": f'',
+                    "picture": playboard[i][j].pictures(),
+                    "x": (self.buttonSpacing + (self.buttonWidth + self.buttonSpacing) * i),
+                    "y": (self.buttonSpacing + (self.buttonHeight + self.buttonSpacing) * j)
+                }
+                buttons.append(current)
+                playboard[i][j].coordinates = (i, j)
+
+        return buttons
+        
+    
+    def save(self, board: Board, whites: Player, blacks: Player, movementRight, movesHistory, lastMove):
+
+        saveData = Save_data(board, whites, blacks, movementRight, movesHistory, lastMove)
+
+        savePath = 'save.pkl'
+
+        print(board)
+
+        if not os.path.exists(savePath):
+            print()
+
+        with open(savePath, 'wb') as file:
+            pickle.dump(saveData, file)
