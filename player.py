@@ -40,6 +40,7 @@ class Player():
             backline: int = 0
             board.map[4][backline].currentPiece = self.pieces[0]
             board.map[3][backline].currentPiece = self.pieces[1]
+            
         else:
             frontline: int = 6
             backline: int = 7
@@ -49,6 +50,7 @@ class Player():
         board.map[0][backline].currentPiece, board.map[7][backline].currentPiece = self.pieces[2], self.pieces[3]
         board.map[1][backline].currentPiece, board.map[6][backline].currentPiece = self.pieces[4], self.pieces[5]
         board.map[2][backline].currentPiece, board.map[5][backline].currentPiece = self.pieces[6], self.pieces[7]
+
 
         for i in range(8, 16):
             board.map[i - 8][frontline].currentPiece = self.pieces[i]

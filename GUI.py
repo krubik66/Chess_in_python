@@ -73,7 +73,7 @@ class GUI():
                             movementRight = loadedSave.movementRight
                             movesHistory = loadedSave.movesHistory
                             lastMove = loadedSave.lastMove
-                            print(f'w: {loadedSave.white}\nb: {loadedSave.black}\nb: {loadedSave.board}')
+                            #print(f'w: {loadedSave.white}\nb: {loadedSave.black}\nb: {loadedSave.board}')
                             print('loaded')
                         except:
                             pass
@@ -92,7 +92,7 @@ class GUI():
                                 self.clearMoves(toMakeRed, playboard)
                                 toMakeRed = []
                                 if moves.isThisTheEnd(playboard, lastMove, movementRight):
-                                    running = self.gameEnded(screen, not movementRight, (screenWidth // 2 - 200, screenHeight // 2 - 100))
+                                    running = self.gameEnded(screen, not movementRight, (screenWidth // 2 - 200, screenHeight // 2 - 100), playboard)
                             else:
                                 cod = button['coordinates']
                                 self.clearMoves(toMakeRed, playboard)
@@ -179,7 +179,7 @@ class GUI():
                 toReturn += f'{boardLetters[move[0][0]]}{abs(move[0][1] - 8)} -> {boardLetters[move[1][0]]}{abs(move[1][1] - 8)} |'
         return toReturn
     
-    def gameEnded(self, screen, whoWon: bool, middle: tuple):
+    def gameEnded(self, screen, whoWon: bool, middle: tuple, playboard: list[list[Place]]):
         running = True
         while running:   
             font = pygame.font.Font(None, 100)
@@ -216,8 +216,12 @@ class GUI():
 
             screen.blit(buttonSurface, buttonRect)
             
-            rendered = font.render(f'{self.whoIsPlaying(whoWon)} win!', True, color=RED)
-            screen.blit(rendered, middle)
+            if moves.check(playboard, not whoWon):
+                rendered = font.render(f'{self.whoIsPlaying(whoWon)} win!', True, color=RED)
+                screen.blit(rendered, middle)
+            else:
+                rendered = font.render(f'Draw', True, color=RED)
+                screen.blit(rendered, middle)
 
             pygame.display.flip()
         
